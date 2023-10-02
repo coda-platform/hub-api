@@ -11,7 +11,7 @@ import SiteSummarizeResponse from '../models/Response/SiteSummarizeResponse';
 import SiteStatsBreakdownResponse from '../models/Response/SiteStatsBreakdownResponse';
 import WebSocketQuery from '../models/Request/WebSocketQuery';
 import queryServices from '../services/QueryServices';
-import Selector from '../models/Request/selector';
+import SiteStatusResponse from '../models/Response/SiteStatusResponse';
 
 var router = express.Router();
 var crypto = require('crypto')
@@ -22,6 +22,27 @@ const schema = Joi.object({
     waitTime: Joi.number().optional(),
     waitAllSites: Joi.boolean().optional()
 });
+
+router.get('/status', async (req, res, next) => {
+    var token = ''
+    if(req.headers.authorization)
+    token = req.headers.authorization.split(' ')[1]
+    const user = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
+
+    try {
+        const { error, value } = schema.validate(req.query);
+        if (error) {
+            res.status(400).send(`Invalid execution parameters, ${error.message}`);
+            return;
+        }
+        const result = await webSocketAdapter.emit<SiteStatusResponse>('getStatsStatus', 'sendStatsStatus')();
+        res.send(result);
+    }
+    catch (error) {
+        error = Object.assign(error, {user: user})
+        next(error);
+    }
+})
 
 router.get('/summarize', async (req, res, next) => {
     const { error, value } = schema.validate(req.query);

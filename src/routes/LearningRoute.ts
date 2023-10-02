@@ -3,10 +3,12 @@ import Joi from 'joi';
 import SiteEvaluateResponse from '../models/Response/SiteEvaluateResponse';
 import SitePrepareResponse from '../models/Response/SitePrepareResponse';
 import SiteTrainResponse from '../models/Response/SiteTrainResponse';
+import SiteStatusResponse from '../models/Response/SiteStatusResponse';
 import LearningServices from '../services/LearningServices';
 import webSocketAdapter from '../websocket/WebSocketAdapter';
 import queryServices from '../services/QueryServices';
 import Redis from '../domain/learning/RedisDataProcessor';
+import HubInfoService from '../services/HubInfoService';
 
 var router = express.Router();
 var crypto = require('crypto')
@@ -15,6 +17,21 @@ var crypto = require('crypto')
 const schema = Joi.object({
     sites: Joi.string(),
 });
+
+router.get('/status', async (req, res, next) => {
+    var token = ''
+    if(req.headers.authorization)
+    token = req.headers.authorization.split(' ')[1]
+    const user = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
+    try {
+        const result = await webSocketAdapter.emit<SiteStatusResponse>('getLearningStatus', 'sendLearningStatus')();
+        res.send(result);
+    }
+    catch (error) {
+        error = Object.assign(error, {user: user})
+        next(error);
+    }
+})
 
 router.get('/prepare', async (req, res, next) => {
      

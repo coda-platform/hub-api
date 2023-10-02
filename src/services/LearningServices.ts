@@ -8,6 +8,7 @@ import Redis from "../domain/learning/RedisDataProcessor";
 import SiteEvaluateResponse from "../models/Response/SiteEvaluateResponse";
 import HubEvaluateResponseMapper from "../domain/learning/HubEvaluateResponseMapper";
 import RedisDataProcessor from "../domain/learning/RedisDataProcessor";
+import SiteStatusResponse from "../models/Response/SiteStatusResponse";
 
 async function compilePrepareResults(webSocketResults: WebSocketBusEventResult<SitePrepareResponse[]>[]) {
     const hubResults = webSocketResults.map(rw => HubPrepareResponseMapper.getMapped(rw));
@@ -102,6 +103,10 @@ async function compileEvaluateResults(webSocketResults: WebSocketBusEventResult<
     return response;
 }
 
+function unwrap(webSocketResults: WebSocketBusEventResult<SiteStatusResponse>[]) {
+    return webSocketResults.filter(wsr => wsr.succeeded).map(wsr => wsr.result);
+}
+
 export default {
-    compilePrepareResults, compileTrainResults, getTrainProgress, compileEvaluateResults
+    compilePrepareResults, compileTrainResults, getTrainProgress, compileEvaluateResults, unwrap
 }

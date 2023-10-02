@@ -26,6 +26,8 @@ import SendLearningEvaluateListeningEvent from "./listeningevents/SendLearningEv
 import version from "./utils/version";
 import genericErrorResponseHandler from "./utils/genericErrorResponseHandler";
 import SendStatsBreakdownListeningEvent from "./listeningevents/SendStatsBreakdownListeningEvent";
+import SendLearningStatusListeningEvent from "./listeningevents/SendLearningStatusListeningEvent";
+import SendStatsStatusListeningEvent from "./listeningevents/SendStatsStatusListeningEvent";
 
 var app = express();
 app.use(bodyParser.json());
@@ -64,5 +66,7 @@ webSocketAdapter.register(server, [
   new SendLearningPrepareListeningEvent(),
   new SendLearningTrainListeningEvent(),
   new SendLearningEvaluateListeningEvent(),
-  new SendStatsBreakdownListeningEvent()
+  new SendStatsBreakdownListeningEvent(),
+  new SendLearningStatusListeningEvent(),
+  new SendStatsStatusListeningEvent(),
 ]);

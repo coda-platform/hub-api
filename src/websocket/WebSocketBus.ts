@@ -25,7 +25,6 @@ function awaitingResultCallbackFactory(awaitingEvents: WebSocketBusEvent[], webS
                 }
 
                 const awaitingResults = webSocketBus.awaitingResults;
-
                 awaitingResults.forEach(ar => {
                     const treatedEvents = new Array<WebSocketBusEvent>();
 

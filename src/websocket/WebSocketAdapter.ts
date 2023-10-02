@@ -50,10 +50,12 @@ class WebSocketAdapter {
                 .reduce((arr: string[] = [], k) => { arr.push(this.connectedClientsMap[k]); return arr; }, [])
             : this.connectedClients;
 
-        this.socket.to(requested_sites as any).emit(event, { eventId, ...args[0] });
+        //this.socket.to(requested_sites as any).emit(event, { eventId, ...args[0] });
 
         const waitTime = args.length > 0 ? args[0].waitTime : Constants.webSocketWaitTime;
-        return webSocketBus.registerAwaitingEvent(requested_sites, eventId, awaitingEvent, waitTime);
+        const results = webSocketBus.registerAwaitingEvent(requested_sites, eventId, awaitingEvent, waitTime);
+        this.socket.to(requested_sites as any).emit(event, { eventId, ...args[0] });
+        return results;
     }
 }
 
