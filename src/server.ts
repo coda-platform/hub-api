@@ -28,6 +28,7 @@ import genericErrorResponseHandler from "./utils/genericErrorResponseHandler";
 import SendStatsBreakdownListeningEvent from "./listeningevents/SendStatsBreakdownListeningEvent";
 import SendLearningStatusListeningEvent from "./listeningevents/SendLearningStatusListeningEvent";
 import SendStatsStatusListeningEvent from "./listeningevents/SendStatsStatusListeningEvent";
+import SendAidboxInfoListeningEvent from "./listeningevents/SendExecAidboxInfoListeningEvent";
 
 var app = express();
 app.use(bodyParser.json());
@@ -69,4 +70,5 @@ webSocketAdapter.register(server, [
   new SendStatsBreakdownListeningEvent(),
   new SendLearningStatusListeningEvent(),
   new SendStatsStatusListeningEvent(),
+  new SendAidboxInfoListeningEvent(),
 ]);
