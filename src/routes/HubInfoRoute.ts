@@ -3,8 +3,14 @@ import SiteInfo from '../models/SiteInfo';
 import HubInfoService from '../services/HubInfoService';
 import webSocketAdapter from '../websocket/WebSocketAdapter';
 import SiteAidboxHealthResponse from '../models/Response/SiteAidboxHealthResponse';
+import Joi from 'joi';
 
 var router = express.Router();
+
+// Schema for base request
+const schema = Joi.object({
+  sites: Joi.string(),
+});
 
 router.get('/', async (req, res) => {
   const resultsWrapper = await webSocketAdapter.emit<SiteInfo>('getSiteInfo', 'sendSiteInfo', req.query)();
@@ -14,7 +20,19 @@ router.get('/', async (req, res) => {
 });
 
 router.get('/health', async (req, res) => {
-  const resultsWrapper = await webSocketAdapter.emit<SiteAidboxHealthResponse>('getAidboxInfo', 'sendAidboxInfo')();
+
+  
+  const { error, value } = schema.validate(req.query);
+  if (error) {
+      res.status(400).send(`Invalid execution parameters, ${error.message}`);
+      return;
+  }
+
+  const query: any = {
+      sites: value.sites ? value.sites.split(",") : []
+  };
+
+  const resultsWrapper = await webSocketAdapter.emit<SiteAidboxHealthResponse>('getAidboxInfo', 'sendAidboxInfo', query)();
   res.send(resultsWrapper);
 })
 

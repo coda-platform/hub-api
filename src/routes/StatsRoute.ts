@@ -35,7 +35,12 @@ router.get('/status', async (req, res, next) => {
             res.status(400).send(`Invalid execution parameters, ${error.message}`);
             return;
         }
-        const result = await webSocketAdapter.emit<SiteStatusResponse>('getStatsStatus', 'sendStatsStatus')();
+
+        const query: any = {
+            sites: value.sites ? value.sites.split(",") : []
+        };
+        
+        const result = await webSocketAdapter.emit<SiteStatusResponse>('getStatsStatus', 'sendStatsStatus', query)();
         res.send(result);
     }
     catch (error) {

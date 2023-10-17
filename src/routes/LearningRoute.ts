@@ -8,7 +8,6 @@ import LearningServices from '../services/LearningServices';
 import webSocketAdapter from '../websocket/WebSocketAdapter';
 import queryServices from '../services/QueryServices';
 import Redis from '../domain/learning/RedisDataProcessor';
-import HubInfoService from '../services/HubInfoService';
 
 var router = express.Router();
 var crypto = require('crypto')
@@ -23,8 +22,19 @@ router.get('/status', async (req, res, next) => {
     if(req.headers.authorization)
     token = req.headers.authorization.split(' ')[1]
     const user = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
+
+    const { error, value } = schema.validate(req.query);
+    if (error) {
+        res.status(400).send(`Invalid execution parameters, ${error.message}`);
+        return;
+    }
+
+    const query: any = {
+        sites: value.sites ? value.sites.split(",") : []
+    };
+
     try {
-        const result = await webSocketAdapter.emit<SiteStatusResponse>('getLearningStatus', 'sendLearningStatus')();
+        const result = await webSocketAdapter.emit<SiteStatusResponse>('getLearningStatus', 'sendLearningStatus', query)();
         res.send(result);
     }
     catch (error) {

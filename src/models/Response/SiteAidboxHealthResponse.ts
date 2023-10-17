@@ -1,3 +1,3 @@
-export default interface SiteStatusResponse {
+export default interface SiteAidboxHealthResponse {
     status: string;
 }
