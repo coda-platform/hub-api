@@ -7,9 +7,6 @@ function getSpecificFieldMapped(sameFieldsFromSites: FieldReponse[]): FieldRepon
         field: sameFieldsFromSites[0].field,
         measure: sameFieldsFromSites[0].measure
     };
-    sameFieldsFromSites = sameFieldsFromSites.filter(f=>{
-        f.count || f.mean || f.stdev || f.ci95
-    })
     const fieldValues = FieldsRequestValueAggregator.aggregateFieldValues(sameFieldsFromSites);
     return Object.assign(field, ...fieldValues);
 }
