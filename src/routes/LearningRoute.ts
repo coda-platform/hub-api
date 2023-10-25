@@ -94,13 +94,15 @@ router.get('/train', async (req, res, next) => {
         };
 
         query.body.weights = Buffer.from(JSON.parse(await Redis.getRedisKey(`${req.body.job}_weights`)).data)
-        res.status(200).send();
 
         for (let i = 0; i < req.body.rounds; i++) {
             const resultsWrapper = await webSocketAdapter.emit<SiteTrainResponse>('getLearningTrain', 'sendLearningTrain', query)();
             const result = await LearningServices.compileTrainResults(resultsWrapper, req.body.job, i + 1, req.body.rounds);
             query.body.weights = result;
         }
+        delete query.body.weights
+        const result = query.body;
+        res.send(result);
     }
     catch (error:any) {
         error = Object.assign(error, {user: user})
