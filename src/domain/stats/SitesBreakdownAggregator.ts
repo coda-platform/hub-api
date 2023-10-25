@@ -9,7 +9,7 @@ function getBreakdownsAggregated(siteRequestSummarizeReponses: HubSummarizeRespo
     for (let hubResponse of siteRequestSummarizeReponses) {
 
         if (!hubResponse.breakdown) throw new Error('Site must have breakdown');
-        for (let breakdownResult of hubResponse.breakdown.result) {
+        for (let breakdownResult of (hubResponse?.breakdown?.result ?? [])) {
             const previousCountForPeriod = siteCountPerPeriodsStarts.get(breakdownResult.periodStart) ?? 0;
             const countAggregated = previousCountForPeriod + (breakdownResult.periodCount ?? 0);
 
