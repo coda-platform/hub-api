@@ -31,8 +31,8 @@ function averageMetrics(siteResults: any) {
   const numOfSites = siteResults.length;
 
   var averageMetrics = siteResults.reduce((accumulator: any, item: any) => {
-    Object.keys(item).forEach(key => {
-      accumulator[key] = (accumulator[key] || 0) + item[key];
+    Object.keys(item ?? {}).forEach(key => {
+      accumulator[key] = (accumulator[key] || 0) + (item[key] || 0);
     });
     return accumulator;
   }, {});
