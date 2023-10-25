@@ -14,7 +14,7 @@ async function compilePrepareResults(webSocketResults: WebSocketBusEventResult<S
     const hubResults = webSocketResults.map(rw => HubPrepareResponseMapper.getMapped(rw));
     let response: any[] = []
     const jobID = hubResults[0].job;
-    const weights = Buffer.from(hubResults[0].weights.data ?? []);
+    const weights = Buffer.from(hubResults[0].weights?.data ?? []);
     const model = hubResults[0].model;
     RedisDataProcessor.setRedisJobId(model, `${jobID}_model`)
     RedisDataProcessor.setRedisJobId(weights, `${jobID}_weights`) //save weights from first site -> to be used initially on all sites
