@@ -2,7 +2,7 @@ import Selector from "../models/Request/selector";
 
 function nestedSelectorsQuery(selectors: Selector[]) {
 
-    if (!selectors) selectors = []
+    if (!selectors) throw new Error('No selectors provided to hub API query service.');
     if (selectors.find(({ resource }) => resource = "Encounter") && selectors.find(({ resource }) => resource = "Location")) {
         const encounterIndex = selectors.findIndex(({ resource }) => resource = "Encounter");
         const locationIndex = selectors.findIndex(({ resource }) => resource = "Location");

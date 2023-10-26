@@ -19,8 +19,8 @@ const schema = Joi.object({
 
 router.get('/status', async (req, res, next) => {
     var token = ''
-    if(req.headers.authorization)
-    token = req.headers.authorization.split(' ')[1]
+    if (req.headers.authorization)
+        token = req.headers.authorization.split(' ')[1]
     const user = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
 
     const { error, value } = schema.validate(req.query);
@@ -38,16 +38,16 @@ router.get('/status', async (req, res, next) => {
         res.send(result);
     }
     catch (error) {
-        error = Object.assign(error, {user: user})
+        error = Object.assign(error, { user: user })
         next(error);
     }
 })
 
 router.get('/prepare', async (req, res, next) => {
-     
+
     var token = ''
-    if(req.headers.authorization)
-    token = req.headers.authorization.split(' ')[1]
+    if (req.headers.authorization)
+        token = req.headers.authorization.split(' ')[1]
     const user = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
 
     try {
@@ -63,23 +63,24 @@ router.get('/prepare', async (req, res, next) => {
             body: req.body,
             sites: value.sites ? value.sites.split(",") : []
         };
+        console.log(query)
 
         const resultsWrapper = await webSocketAdapter.emit<SitePrepareResponse[]>('getLearningPrepare', 'sendLearningPrepare', query)();
         const result = await LearningServices.compilePrepareResults(resultsWrapper);
         res.send(result);
     }
     catch (error) {
-        error = Object.assign(error, {user: user})
+        error = Object.assign(error, { user: user })
         next(error);
     }
 });
 
 router.get('/train', async (req, res, next) => {
-    
+
     var token = ''
-        if(req.headers.authorization)
+    if (req.headers.authorization)
         token = req.headers.authorization.split(' ')[1]
-        const user = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
+    const user = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
 
     try {
         const { error, value } = schema.validate(req.query);
@@ -104,8 +105,8 @@ router.get('/train', async (req, res, next) => {
         const result = query.body;
         res.send(result);
     }
-    catch (error:any) {
-        error = Object.assign(error, {user: user})
+    catch (error: any) {
+        error = Object.assign(error, { user: user })
         next(error);
     }
 });
@@ -113,8 +114,8 @@ router.get('/train', async (req, res, next) => {
 router.get('/progress', async (req, res, next) => {
 
     var token = ''
-    if(req.headers.authorization)
-    token = req.headers.authorization.split(' ')[1]
+    if (req.headers.authorization)
+        token = req.headers.authorization.split(' ')[1]
     const user = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
 
     try {
@@ -127,7 +128,7 @@ router.get('/progress', async (req, res, next) => {
         res.send(result);
     }
     catch (error) {
-        error = Object.assign(error, {user: user})
+        error = Object.assign(error, { user: user })
         next(error);
     }
 })
@@ -135,8 +136,8 @@ router.get('/progress', async (req, res, next) => {
 router.get('/evaluate', async (req, res, next) => {
 
     var token = ''
-    if(req.headers.authorization)
-    token = req.headers.authorization.split(' ')[1]
+    if (req.headers.authorization)
+        token = req.headers.authorization.split(' ')[1]
     const user = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
 
     try {
@@ -155,7 +156,7 @@ router.get('/evaluate', async (req, res, next) => {
         res.send(result);
     }
     catch (error) {
-        error = Object.assign(error, {user: user})
+        error = Object.assign(error, { user: user })
         next(error);
     }
 })
