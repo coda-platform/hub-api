@@ -3,28 +3,33 @@ import HubTrainResponse from "../../models/Response/HubTrainResponse";
 import Redis from "./RedisDataProcessor";
 
 async function averageWeights(siteResults: HubTrainResponse[]) {
-  if (!siteResults[0].weights) return
+  if (!siteResults[0].weights) return;
   const jobID = siteResults[0].job;
-  const loadedModel = await loadModel(siteResults[0]);
 
+  // Load the model once
+  const referenceModel = await loadModel(siteResults[0]);
+
+  // Parallelize the loading and weight extraction
   const allSiteWeightArrays = await Promise.all(siteResults.map(async sr => {
-    const loadedModel = await loadModel(sr);
-
-    const weightsArray = getWeightsArray(loadedModel);
-    return weightsArray
-  }))
+    if (sr !== siteResults[0]) { // Avoid loading the reference model again
+      const loadedModel = await loadModel(sr);
+      return getWeightsArray(loadedModel);
+    } else {
+      return getWeightsArray(referenceModel);
+    }
+  }));
 
   const currentMeanWeights = await calculateMeanWeight(allSiteWeightArrays);
-  const currentAverageModel = await loadWeights(jobID, loadedModel, currentMeanWeights);
+  const currentAverageModel = await loadWeights(jobID, referenceModel, currentMeanWeights);
   const currentMeanWeightBuffer = await saveWeights(currentAverageModel);
-  Redis.addList(jobID + 'weight', currentMeanWeightBuffer)
+  Redis.addList(jobID + 'weight', currentMeanWeightBuffer);
 
+  // Get all past means and calculate the overall mean
   const allMeans = await getPastMeans(jobID, siteResults[0]);
   const resultMean = await calculateMeanWeight(allMeans);
-  const averagedModel = await loadWeights(jobID, loadedModel, resultMean)
-  const result = saveWeights(averagedModel)
+  const averagedModel = await loadWeights(jobID, referenceModel, resultMean);
 
-  return result;
+  return saveWeights(averagedModel);
 }
 
 function averageMetrics(siteResults: any) {
@@ -47,26 +52,28 @@ function averageMetrics(siteResults: any) {
 async function loadModel(siteResult: HubTrainResponse) {
   const siteWeight = siteResult.weights.data;
   const modelStr = await Redis.getRedisKey(`${siteResult.job}_model`);
-  const modelJson = await JSON.parse(JSON.parse(modelStr));
+  const modelJson = JSON.parse(JSON.parse(modelStr));
+
   const weightData = new Uint8Array(Buffer.from(siteWeight)).buffer;
 
   const modelArtifacts = {
     modelTopology: modelJson.modelTopology,
     weightSpecs: modelJson.weightSpecs,
     weightData: weightData
-  }
+  };
+
   const loadedModel = await tf.loadLayersModel(tf.io.fromMemory(modelArtifacts));
   return loadedModel;
 }
 
 async function loadWeights(jobID: string, model: any, weightData: Float32Array[]) {
   const modelStr = await Redis.getRedisKey(`${jobID}_model`);
-  const modelJson = await JSON.parse(JSON.parse(modelStr));
-  let newWeights = [];
-  for (let i = 0; i < model.getWeights().length; i++) {
-    let weight = weightData[i]
-    newWeights.push(tf.tensor(weight, modelJson.weightSpecs[i].shape))
-  }
+  const modelJson = JSON.parse(JSON.parse(modelStr));
+
+  const modelWeights = model.getWeights();
+  const newWeights = modelWeights.map((_: any, index: number) =>
+    tf.tensor(weightData[index], modelJson.weightSpecs[index].shape));
+
   model.setWeights(newWeights);
   return model;
 }
@@ -98,16 +105,34 @@ async function getPastMeans(jobID: string, modelInfo: HubTrainResponse) {
 }
 
 async function calculateMeanWeight(means: any[][]) {
-  let meanofAllWeights = [] //mean using all old weights
-  for (let y = 0; y < means[0].length; y++) { //x = for each weights in weightArray
-    let weightI: any = []
-    for (let x = 0; x < means.length; x++) {//y = for each mean
-      weightI.push(tf.tensor(means[x][y])); //tensor of mean weight
-    }
-    const meanI = new Float32Array(await tf.stack(weightI).mean(0).dataSync());
-    meanofAllWeights.push(meanI);
+  let tensors = means.map(mean => tf.stack(mean.map(weight => tf.tensor(weight))));
+
+  // Stack all the tensors along a new axis (axis=0)
+  let combinedTensor = tf.stack(tensors, 0);
+
+  // Dispose intermediate tensors
+  tensors.forEach(tensor => tensor.dispose());
+
+  // Calculate the mean along the new axis (axis=0)
+  let meanTensor = combinedTensor.mean(0);
+
+  // Dispose the combined tensor
+  combinedTensor.dispose();
+
+  // Split the resulting tensor along the last axis to get separate means for each weight
+  let meanofAllWeights = tf.unstack(meanTensor, -1);
+
+  // Convert each tensor in the list to Float32Array
+  let results = [];
+  for (let tensor of meanofAllWeights) {
+    results.push(new Float32Array(await tensor.data()));
+    tensor.dispose();  // Dispose each tensor after extracting data
   }
-  return meanofAllWeights
+
+  // Dispose the mean tensor
+  meanTensor.dispose();
+
+  return results;
 }
 
 export default {
