@@ -56,7 +56,6 @@ router.get('/prepare', async (req, res, next) => {
             res.status(400).send(`Invalid execution parameters, ${error.message}`);
             return;
         }
-        console.log(req.body)
         const jobID = crypto.randomBytes(12).toString('base64');
         req.body.job = jobID;
         req.body.selectors = queryServices.nestedSelectorsQuery(req.body.selectors);
