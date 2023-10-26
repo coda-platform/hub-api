@@ -1,4 +1,4 @@
-const tf = require("@tensorflow/tfjs-node");
+import * as tf from '@tensorflow/tfjs-node';
 import HubTrainResponse from "../../models/Response/HubTrainResponse";
 import Redis from "./RedisDataProcessor";
 
