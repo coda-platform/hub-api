@@ -105,25 +105,34 @@ async function getPastMeans(jobID: string, modelInfo: HubTrainResponse) {
 }
 
 async function calculateMeanWeight(means: any[][]) {
-  let meanofAllWeights: Float32Array[] = [];
+  let tensors = means.map(mean => tf.stack(mean.map(weight => tf.tensor(weight))));
 
-  for (let y = 0; y < means[0].length; y++) {
-    let tensors: tf.Tensor[] = [];
-    for (let x = 0; x < means.length; x++) {
-      tensors.push(tf.tensor(means[x][y]));
-    }
+  // Stack all the tensors along a new axis (axis=0)
+  let combinedTensor = tf.stack(tensors, 0);
 
-    let stacked = tf.stack(tensors);
-    let meanTensor = stacked.mean(0);
-    meanofAllWeights.push(new Float32Array(await meanTensor.data()));
+  // Dispose intermediate tensors
+  tensors.forEach(tensor => tensor.dispose());
 
-    // Dispose of intermediate tensors
-    tensors.forEach(tensor => tensor.dispose());
-    stacked.dispose();
-    meanTensor.dispose();
+  // Calculate the mean along the new axis (axis=0)
+  let meanTensor = combinedTensor.mean(0);
+
+  // Dispose the combined tensor
+  combinedTensor.dispose();
+
+  // Split the resulting tensor along the last axis to get separate means for each weight
+  let meanofAllWeights = tf.unstack(meanTensor, -1);
+
+  // Convert each tensor in the list to Float32Array
+  let results = [];
+  for (let tensor of meanofAllWeights) {
+    results.push(new Float32Array(await tensor.data()));
+    tensor.dispose();  // Dispose each tensor after extracting data
   }
 
-  return meanofAllWeights;
+  // Dispose the mean tensor
+  meanTensor.dispose();
+
+  return results;
 }
 
 export default {
