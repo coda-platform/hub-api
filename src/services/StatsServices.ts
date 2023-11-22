@@ -57,13 +57,15 @@ function compileResults(webSocketResults: WebSocketBusEventResult<SiteStatsCompi
 }
 
 function breakdownLimit(webSocketResults: WebSocketBusEventResult<SiteSummarizeResponse[]>[], breakdown: Breakdown, waitAllSites: boolean) {
-    const CIResults = webSocketResults
-        .filter(rw => waitAllSites || rw.succeeded)
-        .map(rw => HubSummarizeReponseMapper.getCI95Result(rw, breakdown));
-    if (CIResults && CIResults[0] && CIResults[0][0]) {
-        const smallestAllowableStep = SitesBreakdownLimitAggregator.calculate(CIResults);
-        breakdown.slices.step > smallestAllowableStep || (breakdown.slices.step = smallestAllowableStep);
+    if(breakdown.resource.fieldType != 'dateTime'){
+        const CIResults = webSocketResults
+            .filter(rw => waitAllSites || rw.succeeded)
+            .map(rw => HubSummarizeReponseMapper.getCI95Result(rw, breakdown));
+        if (CIResults && CIResults[0] && CIResults[0][0]) {
+            const smallestAllowableStep = SitesBreakdownLimitAggregator.calculate(CIResults);
+            breakdown.slices.step > smallestAllowableStep || (breakdown.slices.step = smallestAllowableStep);
 
+        }
     }
     return breakdown;
 }
