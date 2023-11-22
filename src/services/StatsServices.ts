@@ -57,7 +57,11 @@ function compileResults(webSocketResults: WebSocketBusEventResult<SiteStatsCompi
 }
 
 function breakdownLimit(webSocketResults: WebSocketBusEventResult<SiteSummarizeResponse[]>[], breakdown: Breakdown, waitAllSites: boolean) {
-    if(breakdown.resource.fieldType != 'dateTime'){
+    if (breakdown.resource.fieldType === 'dateTime') {
+        if (breakdown.slices.step < 86400)
+            breakdown.slices.step = 86400;
+    }
+    else {
         const CIResults = webSocketResults
             .filter(rw => waitAllSites || rw.succeeded)
             .map(rw => HubSummarizeReponseMapper.getCI95Result(rw, breakdown));
