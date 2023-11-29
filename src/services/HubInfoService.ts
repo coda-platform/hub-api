@@ -4,6 +4,7 @@ import WebSocketBusEventResult from "../websocket/WebSocketBusEventResult";
 import _ from 'underscore';
 import ConnInfo from "../models/ConnInfo";
 import ExecInfo from "../models/ExecInfo";
+import RedisDataProcessor from "../domain/learning/RedisDataProcessor";
 
 type Info = SiteInfo | ExecInfo;
 
@@ -32,9 +33,20 @@ function process(results: Info[]) : HubInfo {
 
 // Removes failed sites.
 function unwrap(webSocketResults: WebSocketBusEventResult<Info>[]): HubInfo {
-    return process(webSocketResults.filter(wsr => wsr.succeeded).map(wsr => wsr.result));
+    const result = process(webSocketResults.filter(wsr => wsr.succeeded).map(wsr => wsr.result));
+    const keepAliveTime = 60 * 10 * 1 //seconds * minute * hours: 10 minutes
+    RedisDataProcessor.setRedisJobId(result, 'siteInfo:result', keepAliveTime);
+    return result;
+}
+
+async function checkCacheResult() {
+    return await RedisDataProcessor.existRedisKey('siteInfo:result') > 0;
+}
+
+async function getCacheResult() {
+    return await RedisDataProcessor.getRedisKey('siteInfo:result');
 }
 
 export default {
-    unwrap
+    unwrap, checkCacheResult, getCacheResult
 }

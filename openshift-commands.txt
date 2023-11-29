@@ -4,6 +4,7 @@ oc project ul-val-prj-coda19-dv
 oc project ul-val-prj-coda19-pr01
 
 oc process -f coda19-hub-api.yaml --param-file=openshift-project-params.env | oc create -f -
+oc process -f coda19-hub-api.dev.yaml --param-file=openshift-project-params.dev.env | oc create -f -
 
 # Clean up
 oc delete all,configmap,pvc,serviceaccount,rolebinding --selector app=coda-hub-api

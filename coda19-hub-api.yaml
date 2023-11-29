@@ -116,7 +116,7 @@ objects:
             - name: CODA_HUB_API_ERROR_EMAIL_RECIPIENTS
               value: '${CODA_HUB_API_ERROR_EMAIL_RECIPIENTS}'
             name: ${CODA_HUB_API}
-            image: coda/coda-hub-api:latest
+            image: coda19/coda19-hub-api:latest
             ports:
               - name: ${CODA_HUB_API}
                 containerPort: 8080
@@ -136,7 +136,7 @@ parameters:
   description: >-
     Custom hostname for https service route. Leave blank for default hostname,
     e.g.: <application-name>-<namespace>.<default-domain-suffix>
-  value: api.hub.coda.com
+  value: api.hub.coda19.com
 - name: CODA_HUB_API_PORT
   displayName: APP PORT
   description: 'Application Port'

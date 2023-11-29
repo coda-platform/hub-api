@@ -136,7 +136,7 @@ parameters:
   description: >-
     Custom hostname for https service route. Leave blank for default hostname,
     e.g.: <application-name>-<namespace>.<default-domain-suffix>
-  value: api-dev.hub.coda.com
+  value: api-dev.hub.coda19.com
 - name: CODA_HUB_API_PORT
   displayName: APP PORT
   description: 'Application Port'
