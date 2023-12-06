@@ -8,27 +8,31 @@ const PORT = Number(String(process.env.CODA_HUB_CACHE_DB_PORT)) ? Number(String(
 const client = createClient({ url: `redis://${USERNAME}:${PASSWORD}@${HOST}:${PORT}` })
 client.connect();
 
-async function setRedisKey(result: any) {
-
+async function setRedisKey(result: any, expireTime?: number) {
     const redisKey = generateToken();
-    await client.setEx(redisKey, 60 * 60 * 24, JSON.stringify(result)); //set key expiry to 24h
+    const ex = expireTime ? expireTime: 60 * 60 * 24; //set key expiry. Defaults to 24h
+    await client.setEx(redisKey, ex, JSON.stringify(result));
     return redisKey;
 }
 
-async function setRedisJobId(result: any, jobID: string) {
-    await client.setEx(jobID, 60 * 60 * 24, JSON.stringify(result))
-    return jobID;
+async function setRedisJobId(result: any, jobID: string, expireTime?: number) {
+    const ex = expireTime ? expireTime: 60 * 60 * 24; //set key expiry. Defaults to 24h
+    await client.setEx(jobID, ex, JSON.stringify(result));
+    return;
 }
 
 async function getRedisKey(key: string) {
     const dataset = await client.get(key);
-    await client.expire(key, 60 * 60 * 24); //reset key expiry
     if (dataset === null) {
         return '{}';
     }
     else {
         return dataset;
     }
+}
+
+async function existRedisKey(key: string) {
+    return await client.EXISTS(key)
 }
 
 async function addList(jobID: string, data: any) {
@@ -86,5 +90,6 @@ export default {
     listRange,
     findKeys,
     listBufferRange,
-    getBuffer
+    getBuffer,
+    existRedisKey
 }

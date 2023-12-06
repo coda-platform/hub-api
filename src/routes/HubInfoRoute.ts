@@ -12,24 +12,32 @@ const schema = Joi.object({
   sites: Joi.string(),
 });
 
-router.get('/', async (req, res) => {
-  const resultsWrapper = await webSocketAdapter.emit<SiteInfo>('getSiteInfo', 'sendSiteInfo', req.query)();
+router.get('/sites', async (req, res) => {
+  const hasCachedResult = await HubInfoService.checkCacheResult();
 
-  const hubInfo = HubInfoService.unwrap(resultsWrapper);
-  res.send(hubInfo);
+  if (hasCachedResult) {
+    const hubInfo = await HubInfoService.getCacheResult();
+    console.log(hubInfo)
+    res.send(hubInfo);
+  }
+  else {
+    const resultsWrapper = await webSocketAdapter.emit<SiteInfo>('getSiteInfo', 'sendSiteInfo', req.query)();
+    const hubInfo = HubInfoService.unwrap(resultsWrapper);
+    res.send(hubInfo);
+  }
 });
 
 router.get('/health', async (req, res) => {
 
-  
+
   const { error, value } = schema.validate(req.query);
   if (error) {
-      res.status(400).send(`Invalid execution parameters, ${error.message}`);
-      return;
+    res.status(400).send(`Invalid execution parameters, ${error.message}`);
+    return;
   }
 
   const query: any = {
-      sites: value.sites ? value.sites.split(",") : []
+    sites: value.sites ? value.sites.split(",") : []
   };
 
   const resultsWrapper = await webSocketAdapter.emit<SiteAidboxHealthResponse>('getAidboxInfo', 'sendAidboxInfo', query)();
